@@ -1,0 +1,370 @@
+
+data-search="prompts" placeholder="ابحث عن برومبت..." aria-label="البحث في البرومبتات">
+  </div>
+  <div class="toolbar" data-toolbar="prompts">
+    <button class="chip active" data-filter="all">الكل</button>
+    <button class="chip" data-filter="portrait">صور شخصيات</button>
+    <button class="chip" data-filter="battle">معارك</button>
+    <button class="chip" data-filter="poster">بوسترات</button>
+  </div>
+  <div class="grid" id="promptsGrid"></div>
+  <div class="empty" id="promptsEmpty">لا توجد برومبتات مطابقة.</div>
+</section>
+
+<section class="section" id="files">
+  <div class="section-head">
+    <div><span class="kicker">RESOURCE CENTER</span><h2 class="section-title">📁 الملفات والموارد</h2><p class="section-desc">مكان للملفات النصية والأدلة والموارد التي ستضيفها لاحقًا.</p></div>
+    <input class="search" data-search="files" placeholder="ابحث في الملفات..." aria-label="البحث في الملفات">
+  </div>
+  <div class="grid" id="filesGrid"></div>
+  <div class="empty" id="filesEmpty">لا توجد ملفات مضافة بعد.</div>
+</section>
+
+<section class="upload-panel" id="upload">
+  <span class="kicker">LOCAL FILE PREVIEW</span>
+  <h2>📤 جرّب ملفاتك من جهازك</h2>
+  <p>اختر صورًا أو فيديوهات أو ملفات صوتية أو مستندات لمعاينتها على جهازك. هذه تجربة محلية فقط؛ الملفات لا تُرفع إلى الإنترنت ولا يراها الزوار الآخرون.</p>
+  <div class="upload-actions">
+    <label class="btn primary" for="filePicker">＋ اختيار ملفات</label>
+    <input class="file-input" id="filePicker" type="file" multiple accept="image/*,video/*,audio/*,.pdf,.txt,.md,.doc,.docx,.zip">
+    <button class="btn secondary" id="clearPreview">مسح المعاينة</button>
+  </div>
+  <div class="preview-list" id="previewList"></div>
+  <p id="previewStatus" aria-live="polite">لم يتم اختيار ملفات بعد.</p>
+</section>
+
+<section class="about" id="about">
+  <span class="kicker">ABOUT ANIME HUB</span>
+  <h2>مكان واحد لكل ما تحب في عالم الأنمي.</h2>
+  <p>ANIME HUB مشروع قابل للتطوير، يجمع الصوتيات والفيديوهات والصور والخلفيات والبرومبتات في واجهة عربية واحدة. المحتوى الحقيقي سيظهر عند إضافته إلى ملفات الموقع وربطه بمصادر متاحة على الإنترنت.</p>
+  <a class="btn secondary" href="#home">العودة إلى الأعلى ↑</a>
+</section>
+</main>
+
+<footer>
+  <div class="brand" style="justify-content:center;margin-bottom:10px">ANIME <span>HUB</span></div>
+  <div>مساحة إبداعية لعشاق الأنمي ✦</div>
+  <div style="margin-top:8px">© <span id="year"></span> ANIME HUB</div>
+  <div style="margin-top:10px">انشر فقط المحتوى الذي تملك حق استخدامه ومشاركته.</div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+const $ = (s, root=document) => root.querySelector(s);
+const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+
+$("#year").textContent = new Date().getFullYear();
+
+const content = {
+  audio: [],
+  video: [],
+  images: [],
+  files: [],
+  prompts: [
+    {
+      title:"بوستر أنمي سينمائي",
+      category:"poster",
+      tag:"POSTER",
+      icon:"🎴",
+      theme:"purple",
+      description:"برومبت لتصميم بوستر أنمي بتكوين احترافي.",
+      prompt:"Create a spectacular cinematic anime poster, dramatic composition, dynamic lighting, atmospheric depth, detailed environment, vibrant colors, premium Japanese anime illustration, intricate details, polished professional poster design, 4K quality. Keep the composition clean and visually striking."
+    },
+    {
+      title:"بورتريه شخصية أنمي",
+      category:"portrait",
+      tag:"PORTRAIT",
+      icon:"⚡",
+      theme:"pink",
+      description:"تصميم بورتريه درامي لشخصية أنمي.",
+      prompt:"Create a high-quality anime character portrait, expressive eyes, detailed hair, refined line art, cinematic rim lighting, rich shadows, beautiful color grading, intricate costume details, atmospheric background, professional anime key visual, highly detailed illustration."
+    },
+    {
+      title:"معركة أنمي ملحمية",
+      category:"battle",
+      tag:"BATTLE",
+      icon:"🔥",
+      theme:"gold",
+      description:"مشهد معركة مليء بالطاقة والحركة.",
+      prompt:"Create an epic anime battle scene, two original anime warriors facing off, powerful energy effects, dramatic impact waves, flying debris, dynamic camera angle, motion blur, glowing particles, cinematic lighting, detailed environment, intense atmosphere, professional anime action key visual."
+    },
+    {
+      title:"خلفية أنمي للهاتف",
+      category:"poster",
+      tag:"WALLPAPER",
+      icon:"🌌",
+      theme:"blue",
+      description:"خلفية عمودية مناسبة لشاشة الهاتف.",
+      prompt:"Create a premium vertical anime wallpaper for a smartphone, beautiful atmospheric scenery, dramatic sky, glowing particles, detailed anime illustration, cinematic composition, rich colors, high contrast, clean focal point, 9:16 aspect ratio, 4K quality."
+    },
+    {
+      title:"تحول بقوة خارقة",
+      category:"battle",
+      tag:"TRANSFORMATION",
+      icon:"💥",
+      theme:"pink",
+      description:"لحظة تحول أنمي مليئة بالطاقة.",
+      prompt:"Create a dramatic original anime power transformation scene, brilliant aura expanding outward, swirling energy ribbons, glowing eyes, wind-blown hair and clothing, crackling lightning, floating particles, shockwave effects, dynamic perspective, detailed anime illustration, cinematic lighting."
+    },
+    {
+      title:"تصميم شخصية أصلية",
+      category:"portrait",
+      tag:"CHARACTER",
+      icon:"🗡️",
+      theme:"green",
+      description:"ابتكار شخصية أنمي جديدة بتفاصيل مميزة.",
+      prompt:"Design an original anime character concept sheet, distinctive silhouette, detailed outfit, expressive face, carefully designed accessories, consistent character proportions, front and side views, clean line art, professional character design presentation, balanced colors, high detail."
+    }
+  ]
+};
+
+const categoryLabels = {
+  wallpaper:"خلفية",
+  poster:"بوستر",
+  character:"شخصية",
+  portrait:"بورتريه",
+  battle:"معركة",
+  all:"الكل"
+};
+
+const sectionInfo = {
+  audio: {grid:"audioGrid",empty:"audioEmpty",icon:"🎧",tag:"AUDIO"},
+  video: {grid:"videoGrid",empty:"videoEmpty",icon:"🎬",tag:"VIDEO"},
+  images: {grid:"imagesGrid",empty:"imagesEmpty",icon:"🖼️",tag:"IMAGE"},
+  files: {grid:"filesGrid",empty:"filesEmpty",icon:"📁",tag:"FILE"},
+  prompts: {grid:"promptsGrid",empty:"promptsEmpty",icon:"✨",tag:"PROMPT"}
+};
+
+const filters = {
+  audio:"all",
+  video:"all",
+  images:"all",
+  files:"all",
+  prompts:"all"
+};
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[ch]);
+}
+
+function toast(message) {
+  const el = $("#toast");
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove("show"), 2600);
+}
+
+function downloadText(filename, text) {
+  const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function makeCard(item, section) {
+  const title = escapeHTML(item.title);
+  const description = escapeHTML(item.description || "");
+  const tag = escapeHTML(item.tag || sectionInfo[section].tag);
+  const theme = ["purple","pink","blue","gold","green"].includes(item.theme)
+    ? item.theme : "purple";
+
+  let action = "";
+
+  if (section === "prompts") {
+    action = `
+      <button class="btn primary small" data-copy-prompt="${escapeHTML(item.id)}">
+        نسخ البرومبت
+      </button>`;
+  } else if (item.url) {
+    action = `
+      <a class="btn primary small" href="${escapeHTML(item.url)}"
+         target="_blank" rel="noopener noreferrer">فتح الملف ↗</a>`;
+  } else {
+    action = `<span class="file-type">سيُضاف لاحقًا</span>`;
+  }
+
+  return `
+    <article class="card">
+      <div class="cover ${theme}">
+        <span class="cover-label">${tag}</span>
+        <span class="cover-icon">${escapeHTML(item.icon || sectionInfo[section].icon)}</span>
+      </div>
+      <div class="card-body">
+        <h3>${title}</h3>
+        <p>${description}</p>
+        ${section === "prompts"
+          ? `<div class="prompt-text">${escapeHTML(item.prompt)}</div>`
+          : ""}
+        <div class="card-footer">${action}</div>
+      </div>
+    </article>`;
+}
+
+function renderSection(section) {
+  const info = sectionInfo[section];
+  const grid = $("#" + info.grid);
+  const empty = $("#" + info.empty);
+  const term = ($(`[data-search="${section}"]`)?.value || "").trim().toLowerCase();
+  const filter = filters[section];
+
+  const items = content[section].filter(item => {
+    const text = [
+      item.title, item.description, item.tag, item.prompt,
+      categoryLabels[item.category]
+    ].join(" ").toLowerCase();
+
+    const matchesSearch = text.includes(term);
+    const matchesFilter = filter === "all" || item.category === filter;
+    return matchesSearch && matchesFilter;
+  });
+
+  grid.innerHTML = items.map(item => makeCard(item, section)).join("");
+  empty.style.display = items.length ? "none" : "block";
+}
+
+Object.keys(sectionInfo).forEach(section => {
+  renderSection(section);
+
+  const search = $(`[data-search="${section}"]`);
+  if (search) {
+    search.addEventListener("input", () => renderSection(section));
+  }
+});
+
+$$("[data-toolbar]").forEach(toolbar => {
+  toolbar.addEventListener("click", event => {
+    const button = event.target.closest("[data-filter]");
+    if (!button) return;
+
+    const section = toolbar.dataset.toolbar;
+    filters[section] = button.dataset.filter;
+
+    $$(".chip", toolbar).forEach(chip => {
+      chip.classList.toggle("active", chip === button);
+    });
+
+    renderSection(section);
+  });
+});
+
+document.addEventListener("click", async event => {
+  const button = event.target.closest("[data-copy-prompt]");
+  if (!button) return;
+
+  const item = content.prompts.find(
+    p => p.id === button.dataset.copyPrompt
+  );
+
+  if (!item) return;
+
+  try {
+    await navigator.clipboard.writeText(item.prompt);
+    toast("تم نسخ البرومبت بنجاح!");
+  } catch {
+    downloadText("anime-prompt.txt", item.prompt);
+    toast("تعذر النسخ المباشر؛ تم تجهيز ملف نصي للبرومبت.");
+  }
+});
+
+/* اختيار الملفات هنا يعرض معاينة محلية فقط.
+   لا يتم رفع الملفات إلى GitHub أو أي خادم. */
+const picker = $("#filePicker");
+const previewList = $("#previewList");
+const previewStatus = $("#previewStatus");
+const previewURLs = new Set();
+
+function clearPreviews() {
+  previewURLs.forEach(url => URL.revokeObjectURL(url));
+  previewURLs.clear();
+  previewList.replaceChildren();
+  previewStatus.textContent = "تم مسح المعاينة.";
+  picker.value = "";
+}
+
+$("#clearPreview").addEventListener("click", clearPreviews);
+
+picker.addEventListener("change", () => {
+  const files = [...picker.files];
+
+  if (!files.length) return;
+
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    previewURLs.add(url);
+
+    const item = document.createElement("div");
+    item.className = "preview-item";
+
+    const name = document.createElement("small");
+    name.textContent = file.name;
+
+    const size = document.createElement("small");
+    size.textContent = file.size < 1024 * 1024
+      ? `${(file.size / 1024).toFixed(1)} KB`
+      : `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
+    let media;
+
+    if (file.type.startsWith("image/")) {
+      media = document.createElement("img");
+      media.src = url;
+      media.alt = file.name;
+    } else if (file.type.startsWith("video/")) {
+      media = document.createElement("video");
+      media.src = url;
+      media.controls = true;
+      media.preload = "metadata";
+    } else if (file.type.startsWith("audio/")) {
+      media = document.createElement("audio");
+      media.src = url;
+      media.controls = true;
+      media.preload = "metadata";
+    } else {
+      media = document.createElement("div");
+      media.textContent = "📄";
+      media.style.fontSize = "38px";
+      media.style.textAlign = "center";
+      media.style.padding = "12px";
+    }
+
+    item.append(media, name, size);
+
+    if (!file.type.startsWith("audio/") &&
+        !file.type.startsWith("video/") &&
+        !file.type.startsWith("image/")) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      link.textContent = "تنزيل الملف المختار";
+      item.append(link);
+    }
+
+    previewList.append(item);
+  });
+
+  previewStatus.textContent =
+    `تمت معاينة ${files.length} ملف محليًا. هذه الملفات غير منشورة للزوار.`;
+
+  picker.value = "";
+});
+
+/* تقليل الحركة عند تفعيل إعدادات تقليل الحركة في الجهاز. */
+if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  document.documentElement.style.scrollBehavior = "auto";
+}
+</script>
+</body>
+</html>
